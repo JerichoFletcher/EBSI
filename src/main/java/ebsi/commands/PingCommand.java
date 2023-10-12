@@ -1,37 +1,49 @@
-package ebsi.controllers;
+package ebsi.commands;
 
-import ebsi.core.Env;
 import ebsi.net.jda.JDAService;
-import ebsi.struct.handlers.MessageHandler;
-import net.dv8tion.jda.api.EmbedBuilder;
+import ebsi.struct.Command;
+import ebsi.core.Env;
+import ebsi.util.EmbedTemplate;
+import ebsi.util.Log;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PingController implements MessageHandler {
-    private static final Logger logger = LoggerFactory.getLogger(PingController.class);
-
+public class PingCommand extends Command {
     private static final Set<String> names = new HashSet<>();
     static {
+        names.add("ping");
         names.add("halo");
         names.add("hai");
         names.add("hello");
         names.add("hi");
-        names.add("ping");
     }
 
     @Override
-    public Set<String> getNames() {
+    public String getName() {
+        return "Ping";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Melakukan ping ke bot.";
+    }
+
+    @Override
+    public String[] getUsages() {
+        return new String[]{
+                ""
+        };
+    }
+
+    @Override
+    public Set<String> getTags() {
         return names;
     }
 
@@ -42,25 +54,15 @@ public class PingController implements MessageHandler {
             Duration onlineTime = Duration.between(Env.onlineStartTime, now);
             String onlineTimeStr = createDurationString(onlineTime);
 
-            MessageEmbed embed = new EmbedBuilder()
-                    .setColor(Color.GREEN)
-                    .setThumbnail(JDAService.instance().getSelfUser().getAvatarUrl())
+            MessageEmbed embed = EmbedTemplate.get()
                     .setTitle("Hai!")
                     .setDescription("Aku sekarang online!")
                     .addField("Online sejak", Env.onlineStartTime.format(DateTimeFormatter.ofPattern("hh:mm:ss dd/MM/yyyy")), true)
                     .addField("\u200B", "\u200B", true)
                     .addField("Online selama", onlineTimeStr, true)
-                    .setTimestamp(now.atZone(ZoneId.systemDefault()))
                     .build();
 
-            event.getChannel().sendMessageEmbeds(embed).submit()
-                    .whenComplete((v, e) -> {
-                        if (e == null) {
-                            logger.info("Sent a ping embed to [{} > #{}]", event.getGuild().getName(), event.getChannel().getName());
-                        } else {
-                            logger.error("Error while trying to send a ping embed", e);
-                        }
-                    });
+            JDAService.sendEmbed(this, embed, event.getChannel(), event.getGuild());
         }
     }
 

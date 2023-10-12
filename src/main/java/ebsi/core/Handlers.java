@@ -1,25 +1,34 @@
 package ebsi.core;
 
-import ebsi.controllers.PingController;
-import ebsi.struct.handlers.Handler;
-import ebsi.struct.handlers.MessageHandler;
+import ebsi.commands.HelpCommand;
+import ebsi.commands.PingCommand;
+import ebsi.struct.Command;
+import ebsi.struct.controllers.MessageController;
+import ebsi.struct.Handler;
+import ebsi.util.Log;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Handlers {
-    private static final Logger logger = LoggerFactory.getLogger(Handlers.class);
-
-    private static final String PREFIX = "!";
     private static final List<Handler<? extends Event>> handlers = new ArrayList<>();
     static {
-        handlers.add(new PingController());
+        handlers.add(new HelpCommand());
+        handlers.add(new PingCommand());
+    }
+
+    public static List<Handler<? extends Event>> getHandlers() {
+        return handlers;
+    }
+
+    public static List<Command> getCommands() {
+        return handlers.stream()
+                .filter(handler -> handler instanceof Command)
+                .collect(ArrayList::new, (list, handler) -> list.add((Command)handler), ArrayList::addAll);
     }
 
     public static void accept(Event event) {
@@ -37,16 +46,16 @@ public class Handlers {
 
         String name = args[0].toLowerCase();
         for (Handler<? extends Event> handler : handlers) {
-            if (handler instanceof MessageHandler msgHandler && msgHandler.getNames().contains(name)) {
-                logger.info("Sending event '{}' to handler '{}'", event.getClass().getSimpleName(), msgHandler.getClass().getSimpleName());
-                msgHandler.handle(event, Arrays.copyOfRange(args, 1, args.length));
+            if (handler instanceof MessageController controller && controller.getTags().contains(name)) {
+                Log.get(Handler.class).info("Sending event '{}' to handler '{}'", event.getClass().getSimpleName(), controller.getClass().getSimpleName());
+                controller.handle(event, Arrays.copyOfRange(args, 1, args.length));
             }
         }
     }
 
     private static String[] chop(Message message) {
         String content = message.getContentDisplay().trim().strip();
-        if (!content.startsWith(PREFIX)) return null;
+        if (!content.startsWith(Env.PREFIX)) return null;
         content = content.substring(1).trim().strip();
 
         return content.split("\\s+");
