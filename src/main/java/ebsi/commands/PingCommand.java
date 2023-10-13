@@ -56,17 +56,21 @@ public class PingCommand extends Command {
     @Override
     public <T extends GenericMessageEvent> void handle(T event, String[] eventArgs) {
         if (event instanceof MessageReceivedEvent) {
-            LocalDateTime now = LocalDateTime.now();
-            Duration onlineTime = Duration.between(Env.onlineStartTime, now);
-            String onlineTimeStr = createDurationString(onlineTime);
+            MessageEmbed embed;
+            if (eventArgs.length == 0) {
+                LocalDateTime now = LocalDateTime.now();
+                Duration onlineTime = Duration.between(Env.onlineStartTime, now);
+                String onlineTimeStr = createDurationString(onlineTime);
 
-            MessageEmbed embed = EmbedTemplate.get("Hai!")
-                    .setDescription("Aku sekarang online!")
-                    .addField("Online sejak", Env.onlineStartTime.format(DateTimeFormatter.ofPattern("hh:mm:ss dd/MM/yyyy")), true)
-                    .addBlankField(true)
-                    .addField("Online selama", onlineTimeStr, true)
-                    .build();
-
+                embed = EmbedTemplate.get("Hai!")
+                        .setDescription("Aku sekarang online!")
+                        .addField("Online sejak", Env.onlineStartTime.format(DateTimeFormatter.ofPattern("hh:mm:ss dd/MM/yyyy")), true)
+                        .addBlankField(true)
+                        .addField("Online selama", onlineTimeStr, true)
+                        .build();
+            } else {
+                embed = EmbedTemplate.errorArgc(getCommandUsages(), "Ping!").build();
+            }
             JDAService.sendEmbed(this, embed, event.getChannel(), event.getGuild());
         }
     }

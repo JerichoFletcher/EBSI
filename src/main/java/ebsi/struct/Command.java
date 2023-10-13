@@ -8,16 +8,16 @@ public abstract class Command extends MessageController {
     public abstract String getDescription();
     public abstract String[] getUsages();
 
-    protected static String getCommandAliases(Command command) {
-        return String.format("*Alias:* `%s`", String.join("`, `", command.getTags()));
+    public String getCommandAliases() {
+        return String.format("*Alias:* `%s`", String.join("`, `", getTags()));
     }
 
-    protected static String getCommandUsages(Command command) {
+    public String getCommandUsages() {
         StringBuilder str = new StringBuilder();
         str.append("*Usages:*");
 
-        String primaryTag = command.getPrimaryTag();
-        for (String usage : command.getUsages()) {
+        String primaryTag = getPrimaryTag();
+        for (String usage : getUsages()) {
             str.append(String.format("\n`%s%s", Env.PREFIX, primaryTag));
             if (!usage.isBlank()) str.append(String.format(" %s", usage));
             str.append("`");

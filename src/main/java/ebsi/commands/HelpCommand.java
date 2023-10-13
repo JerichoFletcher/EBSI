@@ -61,7 +61,7 @@ public class HelpCommand extends Command {
                 for (Command command : commands) {
                     embedBuilder.addField(
                             String.format("`%s` - %s", command.getPrimaryTag(), command.getName()),
-                            String.format("%s\n%s\n\u200E", command.getDescription(), getCommandAliases(command)),
+                            String.format("%s\n%s\n\u200E", command.getDescription(), command.getCommandAliases()),
                             false
                     );
                 }
@@ -80,11 +80,11 @@ public class HelpCommand extends Command {
                             )).build();
                 } else {
                     embed = EmbedTemplate.get(String.format("`%s` - %s", command.getPrimaryTag(), command.getName()))
-                            .setDescription(String.format("%s\n%s\n%s", command.getDescription(), getCommandAliases(command), getCommandUsages(command)))
+                            .setDescription(String.format("%s\n%s\n%s", command.getDescription(), command.getCommandAliases(), command.getCommandUsages()))
                             .build();
                 }
             } else {
-                embed = EmbedTemplate.errorArgc(getCommandUsages(this), "Help!").build();
+                embed = EmbedTemplate.errorArgc(getCommandUsages(), "Help!").build();
             }
             JDAService.sendEmbed(this, embed, event.getChannel(), event.getGuild());
         }

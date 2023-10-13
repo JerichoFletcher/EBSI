@@ -55,7 +55,7 @@ public class ThrowDiceCommand extends Command {
         if (event instanceof MessageReceivedEvent) {
             MessageEmbed embed;
             if (eventArgs.length != 1) {
-                embed = EmbedTemplate.errorArgc(getCommandUsages(this), "Dadu!").build();
+                embed = EmbedTemplate.errorArgc(getCommandUsages(), "Dadu!").build();
             } else {
                 try {
                     int val = Integer.parseInt(eventArgs[0]);
