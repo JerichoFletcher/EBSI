@@ -15,7 +15,24 @@ public class EmbedTemplate {
                 .setTimestamp(LocalDateTime.now().atZone(ZoneId.systemDefault()));
     }
 
-    public static EmbedBuilder error() {
+    public static EmbedBuilder get(String title) {
+        return get().setTitle(title);
+    }
+
+    public static EmbedBuilder errorGeneric() {
         return get().setColor(Color.RED);
+    }
+
+    public static EmbedBuilder errorGeneric(String title) {
+        return get(title).setColor(Color.RED);
+    }
+
+    public static EmbedBuilder errorArgc(String usages) {
+        return EmbedTemplate.errorGeneric()
+                .setDescription(String.format("Gini loh cara pakenya :expressionless:\n%s", usages));
+    }
+
+    public static EmbedBuilder errorArgc(String usages, String title) {
+        return errorArgc(usages).setTitle(title);
     }
 }

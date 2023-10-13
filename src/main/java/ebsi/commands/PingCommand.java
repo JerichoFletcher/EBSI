@@ -4,7 +4,6 @@ import ebsi.net.jda.JDAService;
 import ebsi.struct.Command;
 import ebsi.core.Env;
 import ebsi.util.EmbedTemplate;
-import ebsi.util.Log;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -16,13 +15,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PingCommand extends Command {
-    private static final Set<String> names = new HashSet<>();
+    private static final Set<String> tags = new HashSet<>();
+
     static {
-        names.add("ping");
-        names.add("halo");
-        names.add("hai");
-        names.add("hello");
-        names.add("hi");
+        tags.add("ping");
+        tags.add("halo");
+        tags.add("hai");
+        tags.add("hello");
+        tags.add("hi");
+        tags.add("p");
     }
 
     @Override
@@ -44,7 +45,12 @@ public class PingCommand extends Command {
 
     @Override
     public Set<String> getTags() {
-        return names;
+        return tags;
+    }
+
+    @Override
+    public String getPrimaryTag() {
+        return "ping";
     }
 
     @Override
@@ -54,11 +60,10 @@ public class PingCommand extends Command {
             Duration onlineTime = Duration.between(Env.onlineStartTime, now);
             String onlineTimeStr = createDurationString(onlineTime);
 
-            MessageEmbed embed = EmbedTemplate.get()
-                    .setTitle("Hai!")
+            MessageEmbed embed = EmbedTemplate.get("Hai!")
                     .setDescription("Aku sekarang online!")
                     .addField("Online sejak", Env.onlineStartTime.format(DateTimeFormatter.ofPattern("hh:mm:ss dd/MM/yyyy")), true)
-                    .addField("\u200B", "\u200B", true)
+                    .addBlankField(true)
                     .addField("Online selama", onlineTimeStr, true)
                     .build();
 

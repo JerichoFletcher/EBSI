@@ -12,6 +12,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -39,16 +41,44 @@ public class JDAService {
         jda.awaitReady();
     }
 
+    public static CompletableFuture<Message> sendMessage(Object sender, CharSequence msgContent, MessageChannelUnion channel, Guild guild) {
+        return sendMessage(sender, new MessageCreateBuilder().addContent(msgContent.toString()).build(), channel, guild);
+    }
+
     public static CompletableFuture<Message> sendEmbed(Object sender, MessageEmbed embed, MessageChannelUnion channel, Guild guild) {
-        return channel.sendMessageEmbeds(embed).submit()
+        return sendMessage(sender, new MessageCreateBuilder().addEmbeds(embed).build(), channel, guild);
+    }
+
+    public static CompletableFuture<Message> sendMessage(Object sender, MessageCreateData msgData, MessageChannelUnion channel, Guild guild) {
+        return channel.sendMessage(msgData).submit()
                 .whenComplete((msg, e) -> {
                     if (e == null) {
-                        Log.get(sender).info("Sent a ping embed to [{} > #{}]",
-                                guild == null ? "?" : guild.getName(),
-                                channel.getName()
+                        Log.get(sender).info("Sent a message to [{} > #{}]",
+                                guild.getName(), channel.getName()
                         );
                     } else {
-                        Log.get(sender).error("Error while trying to send a ping embed", e);
+                        Log.get(sender).error("Error while trying to send a message", e);
+                    }
+                });
+    }
+
+    public static CompletableFuture<Message> replyMessage(Object sender, CharSequence msgContent, Message source) {
+        return replyMessage(sender, new MessageCreateBuilder().addContent(msgContent.toString()).build(), source);
+    }
+
+    public static CompletableFuture<Message> replyEmbed(Object sender, MessageEmbed embed, Message source) {
+        return replyMessage(sender, new MessageCreateBuilder().addEmbeds(embed).build(), source);
+    }
+
+    public static CompletableFuture<Message> replyMessage(Object sender, MessageCreateData msgData, Message source) {
+        return source.reply(msgData).submit()
+                .whenComplete((msg, e) -> {
+                    if (e == null) {
+                        Log.get(sender).info("Sent a message to [{} > #{}]",
+                                source.getGuild().getName(), source.getChannel().getName()
+                        );
+                    } else {
+                        Log.get(sender).error("Error while trying to send a message", e);
                     }
                 });
     }

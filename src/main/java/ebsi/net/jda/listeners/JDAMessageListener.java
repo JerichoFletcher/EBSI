@@ -15,7 +15,7 @@ public class JDAMessageListener extends ListenerAdapter {
                 event.getGuild().getName(),
                 event.getChannel().getName(),
                 event.getMember().getEffectiveName(),
-                event.getMessage().getContentDisplay()
+                event.getMessage().getContentStripped()
         );
         Handlers.accept(event);
     }
