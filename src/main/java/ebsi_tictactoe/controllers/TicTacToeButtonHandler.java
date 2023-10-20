@@ -1,6 +1,7 @@
 package ebsi_tictactoe.controllers;
 
 import ebsi.net.jda.JDAService;
+import ebsi_ai.struct.IntVector;
 import ebsi_tictactoe.struct.Board;
 import ebsi_tictactoe.struct.Mark;
 import net.dv8tion.jda.api.entities.Message;
@@ -64,7 +65,7 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
             int row = pos / 10, col = pos % 10;
 
             // Play out the move on the board
-            board.play(row - 1, col - 1);
+            board.act(new IntVector(2, row - 1, col - 1));
             Optional<Mark> winner = board.winner();
 
             if (winner.isEmpty()) {

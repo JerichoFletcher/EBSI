@@ -1,10 +1,15 @@
 package ebsi_tictactoe.struct;
 
+import ebsi_ai.struct.IGameState;
+import ebsi_ai.struct.IntVector;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class Board {
+public class Board implements IGameState<IntVector> {
     private static final Short[]
             ROW_MASK = new Short[]{0b111000000, 0b000111000, 0b000000111},
             COL_MASK = new Short[]{0b100100100, 0b010010010, 0b001001001},
@@ -29,10 +34,51 @@ public class Board {
         toPlay = Mark.X;
     }
 
-    public void play(int row, int col) {
+    public Board(Board other) {
+        stateMap = other.stateMap;
+        fillMap = other.fillMap;
+        toPlay = other.toPlay;
+    }
+
+    @Override
+    public void act(IntVector vector) {
+        if (vector.getDimension() != 2) throw new IllegalArgumentException("Incompatible dimension");
+
+        // Get vector components
+        int row = vector.getValue(0);
+        int col = vector.getValue(1);
+        if (row > 2 || col > 2) throw new IndexOutOfBoundsException(vector.toString());
+
         // Set and flip turn
         set(row, col, toPlay);
         toPlay = toPlay.adversary();
+    }
+
+    @Override
+    public List<IntVector> getActions() {
+        List<IntVector> actions = new ArrayList<>();
+        int fill = fillMap;
+        for (int i = 8; i >= 0; i--) {
+            if ((fill & 1) == 1) actions.add(new IntVector(2, i / 3, i % 3));
+            fill >>>= 1;
+        }
+        return actions;
+    }
+
+    @Override
+    public List<IGameState<IntVector>> getChildrenStates() {
+        List<IGameState<IntVector>> children = new ArrayList<>();
+        for (IntVector action : getActions()) {
+            Board child = new Board(this);
+            child.act(action);
+            children.add(child);
+        }
+        return children;
+    }
+
+    @Override
+    public boolean isTerminal() {
+        return winner().isPresent();
     }
 
     public Mark currentPlayer() {
