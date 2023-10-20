@@ -41,5 +41,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Data files ###
+EBSI/
+
 ### Utility files ###
 ebsi_*.bat

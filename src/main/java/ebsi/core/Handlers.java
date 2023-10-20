@@ -1,6 +1,7 @@
 package ebsi.core;
 
 import ebsi.commands.HelpCommand;
+import ebsi.commands.LeaderboardCommand;
 import ebsi.commands.PingCommand;
 import ebsi.commands.ThrowDiceCommand;
 import ebsi.controllers.RandomInterceptController;
@@ -40,6 +41,7 @@ public class Handlers {
         // Commands
         register(new HelpCommand());
         register(new PingCommand());
+        register(new LeaderboardCommand());
         register(new ThrowDiceCommand());
 
         // Games

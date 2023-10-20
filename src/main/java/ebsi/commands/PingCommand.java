@@ -62,8 +62,8 @@ public class PingCommand extends Command {
                 Duration onlineTime = Duration.between(Env.onlineStartTime, now);
                 String onlineTimeStr = createDurationString(onlineTime);
 
-                embed = EmbedTemplate.get("Hai!")
-                        .setDescription("Aku sekarang online!")
+                embed = EmbedTemplate.get("Apaan sih?")
+                        .setDescription("Brisik tau ga")
                         .addField("Online sejak", Env.onlineStartTime.format(DateTimeFormatter.ofPattern("hh:mm:ss dd/MM/yyyy")), true)
                         .addBlankField(true)
                         .addField("Online selama", onlineTimeStr, true)

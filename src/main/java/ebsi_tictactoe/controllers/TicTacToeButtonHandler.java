@@ -1,5 +1,7 @@
 package ebsi_tictactoe.controllers;
 
+import ebsi.core.Coins;
+import ebsi.core.UserData;
 import ebsi.net.jda.JDAService;
 import ebsi.util.Log;
 import ebsi_ai.search.game.Minimax;
@@ -97,15 +99,18 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
                     MessageEditCallbackAction edit;
                     if (winner.get() == Mark.EMPTY) {
                         // Game is tied
-                        edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi boong ea",
+                        edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 5 :coin:!",
                                 players.get(Mark.X),
                                 players.get(Mark.O)
                         ));
+                        Coins.add(event.getGuild(), players.get(Mark.X), 5);
+                        Coins.add(event.getGuild(), players.get(Mark.O), 5);
                     } else {
                         // Game is won
-                        edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
+                        edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 10 :coin:!",
                                 players.get(winner.get())
                         ));
+                        Coins.add(event.getGuild(), players.get(winner.get()), 10);
                     }
                     // Render the final board
                     edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
@@ -116,15 +121,21 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
                     MessageEditCallbackAction edit;
                     if (winner.get() == Mark.EMPTY) {
                         // Game is tied
-                        edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi masih boong ea",
-                                players.get(Mark.X),
-                                players.get(Mark.O)
+                        edit = event.editMessage(String.format("Kita seri, %s! Nih, 2 :coin: buat kamu!",
+                                players.get(Mark.X)
                         ));
+                        Coins.add(event.getGuild(), players.get(Mark.X), 2);
                     } else {
-                        // Game is won
-                        edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
-                                players.get(winner.get())
-                        ));
+                        if (winner.get() == Mark.X) {
+                            // Human player won
+                            edit = event.editMessage(String.format("Selamat, %s! Kamu mendapatkan 5 :coin:!",
+                                    players.get(winner.get())
+                            ));
+                            Coins.add(event.getGuild(), players.get(Mark.X), 5);
+                        } else {
+                            // Bot won
+                            edit = event.editMessage("HAHAHAHAHAHA BISA MAIN TICTACTOE GA SIH");
+                        }
                     }
                     // Render the final board
                     edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
@@ -149,15 +160,21 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
                         MessageEditCallbackAction edit;
                         if (winner.get() == Mark.EMPTY) {
                             // Game is tied
-                            edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi boong ea",
-                                    players.get(Mark.X),
-                                    players.get(Mark.O)
+                            edit = event.editMessage(String.format("Kita seri, %s! Nih, 2 :coin: buat kamu!",
+                                    players.get(Mark.X)
                             ));
+                            Coins.add(event.getGuild(), players.get(Mark.X), 2);
                         } else {
-                            // Game is won
-                            edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
-                                    players.get(winner.get())
-                            ));
+                            if (winner.get() == Mark.X) {
+                                // Human player won
+                                edit = event.editMessage(String.format("Selamat, %s! Kamu mendapatkan 5 :coin:!",
+                                        players.get(winner.get())
+                                ));
+                                Coins.add(event.getGuild(), players.get(Mark.X), 5);
+                            } else {
+                                // Bot won
+                                edit = event.editMessage("HAHAHAHAHAHA BISA MAIN TICTACTOE GA SIH");
+                            }
                         }
                         // Render the final board
                         edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
