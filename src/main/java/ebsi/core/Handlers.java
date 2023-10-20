@@ -8,6 +8,7 @@ import ebsi.struct.Command;
 import ebsi.struct.controllers.MessageController;
 import ebsi.struct.Handler;
 import ebsi.util.Log;
+import ebsi_tictactoe.EBSITicTacToeCommand;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -40,6 +41,9 @@ public class Handlers {
         register(new HelpCommand());
         register(new PingCommand());
         register(new ThrowDiceCommand());
+
+        // Games
+        register(new EBSITicTacToeCommand());
     }
 
     /**
@@ -62,6 +66,17 @@ public class Handlers {
         handlers.add(handler);
         Log.get(Handlers.class).info("Registered handler '{}'", handler.getClass().getSimpleName());
         return true;
+    }
+
+    /**
+     * Unregisters a handler from the bot. Events will no longer be passed to the handler after it is unregistered.
+     * @param handler The handler to unregister.
+     */
+    public static void unregister(Handler<? extends Event> handler) {
+        if (handlers.contains(handler)) {
+            handlers.remove(handler);
+            Log.get(Handlers.class).info("Unregistered handler '{}'", handler.getClass().getSimpleName());
+        }
     }
 
     public static void accept(Event event) {

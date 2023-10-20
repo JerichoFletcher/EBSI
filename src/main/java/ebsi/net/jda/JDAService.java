@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -39,6 +40,20 @@ public class JDAService {
                 .addEventListeners(new JDAMessageListener())
                 .build();
         jda.awaitReady();
+    }
+
+    public static void addEventListener(Object... adapter) {
+        jda.addEventListener(adapter);
+        for (Object a : adapter) {
+            Log.get(JDAService.class).info("Added event listener '{}'", a.getClass().getSimpleName());
+        }
+    }
+
+    public static void removeEventListener(Object... adapter) {
+        jda.removeEventListener(adapter);
+        for (Object a : adapter) {
+            Log.get(JDAService.class).info("Removed event listener '{}'", a.getClass().getSimpleName());
+        }
     }
 
     public static CompletableFuture<Message> sendMessage(Object sender, CharSequence msgContent, MessageChannelUnion channel, Guild guild) {
