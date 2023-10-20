@@ -1,24 +1,21 @@
 package ebsi_tictactoe.struct;
 
-import ebsi.util.Log;
-
-import javax.swing.text.html.Option;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Board {
     private static final Short[]
             ROW_MASK = new Short[]{0b111000000, 0b000111000, 0b000000111},
             COL_MASK = new Short[]{0b100100100, 0b010010010, 0b001001001},
             DIAG_MASK = new Short[]{0b100010001, 0b001010100},
-            SQUARE_MASK;
+            SQUARE_MASK, THREE_MASK;
     static {
         SQUARE_MASK = new Short[9];
         for (int i = 0; i < 9; i++) {
             SQUARE_MASK[i] = (short) (ROW_MASK[i / 3] & COL_MASK[i % 3]);
         }
+        THREE_MASK = Stream.concat(Stream.concat(Arrays.stream(ROW_MASK), Arrays.stream(COL_MASK)), Arrays.stream(DIAG_MASK)).toArray(Short[]::new);
     }
 
     private short stateMap;
@@ -43,16 +40,10 @@ public class Board {
     }
 
     public Optional<Mark> winner() {
-        // Collect every fully filled row, column, and diagonal
-        List<Short> filled = new ArrayList<>();
-        filled.addAll(Arrays.stream(ROW_MASK).filter(mask -> (mask & fillMap) == mask).toList());
-        filled.addAll(Arrays.stream(COL_MASK).filter(mask -> (mask & fillMap) == mask).toList());
-        filled.addAll(Arrays.stream(DIAG_MASK).filter(mask -> (mask & fillMap) == mask).toList());
-
-        Log.get(this).info("Fill count: {}", filled.size());
-
         // Check each row, column, and diagonal
-        for (short mask : filled) {
+        for (short mask : THREE_MASK) {
+            if ((mask & fillMap) != mask) continue;
+
             short check = (short) (mask & stateMap);
             if (check == mask) return Optional.of(Mark.O);
             if (check == 0) return Optional.of(Mark.X);

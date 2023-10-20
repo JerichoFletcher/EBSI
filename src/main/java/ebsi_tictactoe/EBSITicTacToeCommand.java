@@ -62,6 +62,15 @@ public class EBSITicTacToeCommand extends Command {
             if (eventArgs.length == 1) {
                 List<User> m = msgEvent.getMessage().getMentions().getUsers();
                 if (m.size() == 1) {
+                    // Prevent self-mention
+                    if (m.get(0).equals(msgEvent.getAuthor())) {
+                        MessageEmbed embed = EmbedTemplate.errorGeneric("Tic-Tac-Toe!")
+                                .setDescription("Ga boleh main lawan diri sendiri ya dek :face_with_hand_over_mouth:")
+                                .build();
+                        JDAService.sendEmbed(this, embed, event.getChannel(), event.getGuild());
+                        return;
+                    }
+
                     MessageCreateData message = new MessageCreateBuilder()
                             .setContent(String.format("""
                                     Sekarang giliran <@%s>!
