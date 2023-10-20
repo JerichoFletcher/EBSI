@@ -26,43 +26,73 @@ public class Board implements IGameState<IntVector> {
     private short stateMap;
     private short fillMap;
 
+    private Mark[] state;
+
     private Mark toPlay;
+    private IntVector lastAction;
 
     public Board() {
         stateMap = 0;
         fillMap = 0;
         toPlay = Mark.X;
+        lastAction = null;
+
+        state = new Mark[9];
+        Arrays.fill(state, Mark.EMPTY);
     }
 
     public Board(Board other) {
         stateMap = other.stateMap;
         fillMap = other.fillMap;
         toPlay = other.toPlay;
+        lastAction = other.lastAction;
+
+        state = Arrays.copyOf(other.state, 9);
     }
 
     @Override
-    public void act(IntVector vector) {
-        if (vector.getDimension() != 2) throw new IllegalArgumentException("Incompatible dimension");
+    public IGameState<IntVector> getChildFrom(IntVector action) {
+        Board board = new Board(this);
+        board.act(action);
+        return board;
+    }
+
+    public void act(IntVector action) {
+        if (action.getDimension() != 2) throw new IllegalArgumentException("Incompatible dimension");
 
         // Get vector components
-        int row = vector.getValue(0);
-        int col = vector.getValue(1);
-        if (row > 2 || col > 2) throw new IndexOutOfBoundsException(vector.toString());
+        int row = action.getValue(0);
+        int col = action.getValue(1);
+        if (row > 2 || col > 2) throw new IndexOutOfBoundsException(action.toString());
 
         // Set and flip turn
         set(row, col, toPlay);
         toPlay = toPlay.adversary();
+
+        // Store this action
+        lastAction = action;
     }
 
     @Override
     public List<IntVector> getActions() {
         List<IntVector> actions = new ArrayList<>();
-        int fill = fillMap;
-        for (int i = 8; i >= 0; i--) {
-            if ((fill & 1) == 1) actions.add(new IntVector(2, i / 3, i % 3));
-            fill >>>= 1;
+        for (int i = 0; i < 9; i++) {
+            if (state[i] == Mark.EMPTY) actions.add(new IntVector(2, i / 3, i % 3));
         }
         return actions;
+
+//        List<IntVector> actions = new ArrayList<>();
+//        int empty = ~fillMap;
+//        for (int i = 8; i >= 0; i--) {
+//            if ((empty & 1) == 1) actions.add(new IntVector(2, i / 3, i % 3));
+//            empty >>>= 1;
+//        }
+//        return actions;
+    }
+
+    @Override
+    public IntVector getLastAction() {
+        return lastAction;
     }
 
     @Override
@@ -101,10 +131,13 @@ public class Board implements IGameState<IntVector> {
 
     public Mark get(int row, int col) {
         // Read the flags from stored bitmaps and construct the appropriate mark
-        return Mark.from(fillMap & SQUARE_MASK[row * 3 + col], stateMap & SQUARE_MASK[row * 3 + col]);
+        return state[row * 3 + col];
+//        return Mark.from(fillMap & SQUARE_MASK[row * 3 + col], stateMap & SQUARE_MASK[row * 3 + col]);
     }
 
     public void set(int row, int col, Mark mark) {
+        state[row * 3 + col] = mark;
+
         // Construct the square mask for the new mark
         int isNotEmpty = !mark.isEmpty() ? 0xFFF : 0;
         int isO = mark.isO() ? 0xFFF : 0;
@@ -115,5 +148,21 @@ public class Board implements IGameState<IntVector> {
         // Set the appropriate flags for each bitmap
         fillMap = (short) (fillMap & ~SQUARE_MASK[row * 3 + col] | notEmptyMask);
         stateMap = (short) (stateMap & ~SQUARE_MASK[row * 3 + col] | oMask);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                str.append(switch (state[row * 3 + col]) {
+                    case X -> "X";
+                    case O -> "O";
+                    case EMPTY -> "_";
+                });
+            }
+            str.append("\n");
+        }
+        return str.append(String.format("Last move: %s\n", lastAction)).toString();
     }
 }

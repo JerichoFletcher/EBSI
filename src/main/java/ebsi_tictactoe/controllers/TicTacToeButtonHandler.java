@@ -1,8 +1,11 @@
 package ebsi_tictactoe.controllers;
 
 import ebsi.net.jda.JDAService;
+import ebsi.util.Log;
+import ebsi_ai.search.game.Minimax;
 import ebsi_ai.struct.IntVector;
 import ebsi_tictactoe.struct.Board;
+import ebsi_tictactoe.struct.BoardEvaluator;
 import ebsi_tictactoe.struct.Mark;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -19,14 +22,23 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
     private final Message gameMessage;
     private final Map<Mark, User> players;
     private final Board board;
+    private final boolean versusBot;
+    private final Minimax<IntVector, Board> minimax;
 
     public TicTacToeButtonHandler(Message gameMessage, User player1, User player2) {
         this.gameMessage = gameMessage;
 
         players = new HashMap<>();
         players.put(Mark.X, player1);
-        players.put(Mark.O, player2);
+        if (player2 != null) {
+            players.put(Mark.O, player2);
+            versusBot = false;
+        } else {
+            players.put(Mark.O, JDAService.instance().getSelfUser());
+            versusBot = true;
+        }
 
+        minimax = versusBot ? new Minimax<>(new BoardEvaluator()) : null;
         board = new Board();
     }
 
@@ -50,10 +62,10 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
             if (!event.getUser().equals(players.get(currentPlayer))) {
                 event.deferEdit().queue();
                 if (!event.getUser().equals(players.get(currentPlayer.adversary())) && Math.random() < 0.1) {
-                    event.reply(String.format("TAU GA GAIS @everyone, SI <@%s> SAMA <@%s> LAGI MAIN TICTACTOE EH TAU2NYA SI <@%s> SOK IYE MENCET TOMBOL GAIS",
-                                    players.get(Mark.X).getId(),
-                                    players.get(Mark.O).getId(),
-                                    event.getUser().getId()))
+                    event.reply(String.format("TAU GA GAIS @everyone, SI %s SAMA %s LAGI MAIN TICTACTOE EH TAU2NYA SI %s SOK IYE MENCET TOMBOL GAIS",
+                                    players.get(Mark.X),
+                                    players.get(Mark.O),
+                                    event.getUser()))
                             .queue();
                 }
                 return;
@@ -63,53 +75,113 @@ public class TicTacToeButtonHandler extends ListenerAdapter {
             String arg = id.replace("ebsi_tictactoe.board.", "");
             int pos = Integer.parseInt(arg);
             int row = pos / 10, col = pos % 10;
+            Log.get(this).info("ID: {}, Press: {} {}", id, row, col);
 
             // Play out the move on the board
             board.act(new IntVector(2, row - 1, col - 1));
             Optional<Mark> winner = board.winner();
 
-            if (winner.isEmpty()) {
-                // Game is still ongoing
-                event.editMessage(MessageEditBuilder.fromMessage(event.getMessage())
-                        .setContent(String.format("""
-                                    Sekarang giliran %s!
-                                    Tekan salah satu tombol di bawah untuk meletakkan %s.""",
-                                players.get(board.currentPlayer()),
-                                board.currentPlayer().asEmoji().getFormatted()
-                        ))
-                        .setComponents(event.getMessage().getActionRows().stream().map(
-                                actionRow -> ActionRow.of(actionRow.getButtons().stream().map(button -> {
-                                    if (button.equals(event.getButton())) {
-                                        return button.withLabel(currentPlayer.asEmoji().getFormatted()).asDisabled();
-                                    } else return button;
-                                }).toList())
-                        ).toList())
-                        .build()).queue();
-            } else {
-                MessageEditCallbackAction edit;
-                if (winner.get() == Mark.EMPTY) {
-                    // Game is tied
-                    edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi boong ea",
-                            players.get(Mark.X),
-                            players.get(Mark.O)
-                    ));
+            if (!versusBot) {
+                if (winner.isEmpty()) {
+                    // Game is still ongoing
+                    event.editMessage(MessageEditBuilder.fromMessage(event.getMessage())
+                            .setContent(String.format("""
+                                            Sekarang giliran %s!
+                                            Tekan salah satu tombol di bawah untuk meletakkan %s.""",
+                                    players.get(board.currentPlayer()),
+                                    board.currentPlayer().asEmoji().getFormatted()
+                            ))
+                            .setComponents(renderBoard(event.getMessage().getActionRows(), false))
+                            .build()).queue();
                 } else {
-                    // Game is won
-                    edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
-                            players.get(winner.get())
-                    ));
+                    MessageEditCallbackAction edit;
+                    if (winner.get() == Mark.EMPTY) {
+                        // Game is tied
+                        edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi boong ea",
+                                players.get(Mark.X),
+                                players.get(Mark.O)
+                        ));
+                    } else {
+                        // Game is won
+                        edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
+                                players.get(winner.get())
+                        ));
+                    }
+                    // Render the final board
+                    edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
+                    JDAService.removeEventListener(this);
                 }
-                edit.setComponents(event.getMessage().getActionRows().stream()
-                                .map(actionRow -> ActionRow.of(actionRow.getButtons().stream().map(button -> {
-                                            if (button.equals(event.getButton())) {
-                                                return button.withLabel(currentPlayer.asEmoji().getFormatted()).asDisabled();
-                                            } else return button.asDisabled();
-                                        })
-                                        .toList()))
-                                .toList())
-                        .queue();
-                JDAService.removeEventListener(this);
+            } else {
+                if (winner.isPresent()) {
+                    MessageEditCallbackAction edit;
+                    if (winner.get() == Mark.EMPTY) {
+                        // Game is tied
+                        edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi masih boong ea",
+                                players.get(Mark.X),
+                                players.get(Mark.O)
+                        ));
+                    } else {
+                        // Game is won
+                        edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
+                                players.get(winner.get())
+                        ));
+                    }
+                    // Render the final board
+                    edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
+                    JDAService.removeEventListener(this);
+                } else {
+                    // Play out the bot move on the board
+                    board.act(minimax.search(board).getAction());
+                    winner = board.winner();
+
+                    if (winner.isEmpty()) {
+                        // Game is still ongoing
+                        event.editMessage(MessageEditBuilder.fromMessage(event.getMessage())
+                                .setContent(String.format("""
+                                            Sekarang giliran %s!
+                                            Tekan salah satu tombol di bawah untuk meletakkan %s.""",
+                                        players.get(board.currentPlayer()),
+                                        board.currentPlayer().asEmoji().getFormatted()
+                                ))
+                                .setComponents(renderBoard(event.getMessage().getActionRows(), false))
+                                .build()).queue();
+                    } else {
+                        MessageEditCallbackAction edit;
+                        if (winner.get() == Mark.EMPTY) {
+                            // Game is tied
+                            edit = event.editMessage(String.format("%s dan %s seri! Kamu mendapatkan 50 :coin:! Tapi boong ea",
+                                    players.get(Mark.X),
+                                    players.get(Mark.O)
+                            ));
+                        } else {
+                            // Game is won
+                            edit = event.editMessage(String.format("%s menang! Kamu mendapatkan 100 :coin:! Tapi boong ea",
+                                    players.get(winner.get())
+                            ));
+                        }
+                        // Render the final board
+                        edit.setComponents(renderBoard(event.getMessage().getActionRows(), true)).queue();
+                        JDAService.removeEventListener(this);
+                    }
+                }
             }
         }
+    }
+
+    private List<ActionRow> renderBoard(List<ActionRow> actionRows, boolean disabled) {
+        return actionRows.stream()
+                .map(actionRow -> ActionRow.of(actionRow.getButtons().stream()
+                        .map(button -> {
+                            String arg = button.getId().replace("ebsi_tictactoe.board.", "");
+                            int pos = Integer.parseInt(arg);
+                            int row = pos / 10, col = pos % 10;
+
+                            Mark mark = board.get(row - 1, col - 1);
+                            if (!mark.isEmpty()) {
+                                return button.withEmoji(mark.asEmoji()).asDisabled();
+                            }
+                            return disabled ? button.asDisabled() : button.asEnabled();
+                        }).toList())
+                ).toList();
     }
 }

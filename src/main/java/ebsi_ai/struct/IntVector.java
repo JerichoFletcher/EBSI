@@ -20,6 +20,7 @@ public class IntVector {
 
     public int getValue(int index) {
         if (index >= dimension) throw new IndexOutOfBoundsException();
+        index = dimension - index - 1;
 
         int mask = ~0 >>> (Integer.SIZE - size);
         return (vector & (mask << (size * index))) >>> (size * index);

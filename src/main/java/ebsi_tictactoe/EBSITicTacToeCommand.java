@@ -42,6 +42,7 @@ public class EBSITicTacToeCommand extends Command {
     @Override
     public String[] getUsages() {
         return new String[]{
+                "",
                 "<lawan>"
         };
     }
@@ -59,7 +60,32 @@ public class EBSITicTacToeCommand extends Command {
     @Override
     public <T1 extends GenericMessageEvent> void handle(T1 event, String[] eventArgs) {
         if (event instanceof MessageReceivedEvent msgEvent) {
-            if (eventArgs.length == 1) {
+            if (eventArgs.length == 0) {
+                MessageCreateData message = new MessageCreateBuilder()
+                        .setContent(String.format("""
+                                    Sekarang giliran <@%s>!
+                                    Tekan salah satu tombol di bawah untuk meletakkan :x:.""",
+                                msgEvent.getAuthor().getId())
+                        )
+                        .addActionRow(
+                                Button.secondary("ebsi_tictactoe.board.11", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.12", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.13", "\u200E")
+                        )
+                        .addActionRow(
+                                Button.secondary("ebsi_tictactoe.board.21", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.22", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.23", "\u200E")
+                        )
+                        .addActionRow(
+                                Button.secondary("ebsi_tictactoe.board.31", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.32", "\u200E"),
+                                Button.secondary("ebsi_tictactoe.board.33", "\u200E")
+                        )
+                        .build();
+                JDAService.sendMessage(this, message, event.getChannel(), event.getGuild())
+                        .whenComplete((msg, e) -> JDAService.addEventListener(new TicTacToeButtonHandler(msg, msgEvent.getAuthor(), null)));
+            } else if (eventArgs.length == 1) {
                 List<User> m = msgEvent.getMessage().getMentions().getUsers();
                 if (m.size() == 1) {
                     // Prevent self-mention
